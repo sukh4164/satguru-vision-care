@@ -34,3 +34,4 @@ yarn-error.log*
 # SQLite WAL & temp files
 data/*.db-shm
 data/*.db-wal
+
