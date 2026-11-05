@@ -20,16 +20,16 @@ export async function POST(
       return NextResponse.json({ error: "Status is required" }, { status: 400 });
     }
 
-    const order = db.prepare(`SELECT o.*, c.name as customer_name FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.id = ?`).get(orderId) as any;
+    const order = (await db.prepare(`SELECT o.*, c.name as customer_name FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.id = ?`).get(orderId)) as any;
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    db.prepare(`UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(status, orderId);
+    await db.prepare(`UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(status, orderId);
 
     // If delivered and there is remaining balance, create a pending payment reminder
     if (status === "Delivered" && order.remaining_balance > 0) {
-      db.prepare(`
+      await db.prepare(`
         INSERT INTO followups (
           customer_id, order_id, type, scheduled_date, status, priority, notes, created_by
         ) VALUES (?, ?, 'Pending Payment', ?, 'Pending', 'High', ?, ?)
@@ -42,7 +42,7 @@ export async function POST(
       );
     }
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Order Status Updated",
@@ -51,11 +51,10 @@ export async function POST(
       details: `Status changed from "${order.status}" to "${status}". Note: ${note || "None"}`,
     });
 
-    const updated = db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId);
+    const updated = await db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId);
     return NextResponse.json({ success: true, order: updated });
   } catch (err: any) {
     console.error("Order status update error:", err);
     return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });
   }
 }
-

@@ -15,7 +15,7 @@ export async function GET(
 
     const prescriptionId = params.id;
 
-    const prescription = db
+    const prescription = (await db
       .prepare(
         `
         SELECT 
@@ -36,14 +36,14 @@ export async function GET(
         WHERE p.id = ? OR p.prescription_code = ?
       `
       )
-      .get(prescriptionId, prescriptionId) as any;
+      .get(prescriptionId, prescriptionId)) as any;
 
     if (!prescription) {
       return NextResponse.json({ error: "Prescription not found" }, { status: 404 });
     }
 
     // Find the immediately preceding (previous) prescription for this customer
-    const previousPrescription = db
+    const previousPrescription = (await db
       .prepare(
         `
         SELECT * FROM prescriptions
@@ -52,10 +52,10 @@ export async function GET(
         LIMIT 1
       `
       )
-      .get(prescription.customer_id, prescription.prescription_date, prescription.prescription_date, prescription.id) as any;
+      .get(prescription.customer_id, prescription.prescription_date, prescription.prescription_date, prescription.id)) as any;
 
     // Fetch store settings for prescription print
-    const storeSettings = db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
+    const storeSettings = await db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
 
     return NextResponse.json({
       success: true,
@@ -80,7 +80,7 @@ export async function PUT(
     }
 
     const prescriptionId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId) as any;
+    const existing = (await db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId)) as any;
 
     if (!existing) {
       return NextResponse.json({ error: "Prescription not found" }, { status: 404 });
@@ -107,7 +107,7 @@ export async function PUT(
       notes,
     } = body;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE prescriptions SET
         doctor_name = COALESCE(?, doctor_name),
         prescription_type = COALESCE(?, prescription_type),
@@ -149,7 +149,7 @@ export async function PUT(
       prescriptionId
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Prescription Updated",
@@ -158,7 +158,7 @@ export async function PUT(
       details: `Modified prescription ${existing.prescription_code} values`,
     });
 
-    const updated = db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId);
+    const updated = await db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId);
     return NextResponse.json({ success: true, prescription: updated });
   } catch (err: any) {
     console.error("Prescription PUT error:", err);
@@ -177,14 +177,14 @@ export async function DELETE(
     }
 
     const prescriptionId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId) as any;
+    const existing = (await db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(prescriptionId)) as any;
 
     if (!existing) {
       return NextResponse.json({ error: "Prescription not found" }, { status: 404 });
     }
 
     // Check if any order is linked to this prescription
-    const linkedOrder = db.prepare(`SELECT order_code FROM orders WHERE prescription_id = ? LIMIT 1`).get(prescriptionId) as any;
+    const linkedOrder = (await db.prepare(`SELECT order_code FROM orders WHERE prescription_id = ? LIMIT 1`).get(prescriptionId)) as any;
     if (linkedOrder) {
       return NextResponse.json(
         { error: `Cannot delete: This prescription is linked to order ${linkedOrder.order_code}` },
@@ -192,9 +192,9 @@ export async function DELETE(
       );
     }
 
-    db.prepare(`DELETE FROM prescriptions WHERE id = ?`).run(prescriptionId);
+    await db.prepare(`DELETE FROM prescriptions WHERE id = ?`).run(prescriptionId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Prescription Deleted",
@@ -209,4 +209,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete prescription" }, { status: 500 });
   }
 }
-

@@ -14,7 +14,7 @@ export async function GET(
 
     const invoiceId = params.id;
 
-    const invoice = db
+    const invoice = (await db
       .prepare(
         `
         SELECT 
@@ -48,14 +48,14 @@ export async function GET(
         WHERE i.id = ? OR i.invoice_code = ?
       `
       )
-      .get(invoiceId, invoiceId) as any;
+      .get(invoiceId, invoiceId)) as any;
 
     if (!invoice) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
     // Payment history for this invoice
-    const payments = db
+    const payments = await db
       .prepare(
         `
         SELECT p.*, u.name as receiver_name
@@ -68,7 +68,7 @@ export async function GET(
       .all(invoice.id, invoice.order_id);
 
     // Store settings for invoice printing
-    const storeSettings = db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
+    const storeSettings = await db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
 
     return NextResponse.json({ success: true, invoice, payments, storeSettings });
   } catch (err: any) {
@@ -76,4 +76,3 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch invoice" }, { status: 500 });
   }
 }
-

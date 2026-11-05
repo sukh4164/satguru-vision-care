@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const cleanIdentifier = identifier.trim().toLowerCase();
 
-    const user = db
+    const user = (await db
       .prepare(
         `
         SELECT u.id, u.employee_id, u.name, u.username, u.email, u.password_hash, u.status, r.name as role_name
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         WHERE lower(u.username) = ? OR lower(u.email) = ?
       `
       )
-      .get(cleanIdentifier, cleanIdentifier) as
+      .get(cleanIdentifier, cleanIdentifier)) as
       | {
           id: number;
           employee_id: string;
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       role: user.role_name,
     });
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Staff Login",

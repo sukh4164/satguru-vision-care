@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     query += ` ORDER BY id DESC LIMIT ?`;
     params.push(limit);
 
-    const logs = db.prepare(query).all(...params);
+    const logs = await db.prepare(query).all(...params);
 
     return NextResponse.json({ success: true, logs });
   } catch (err: any) {

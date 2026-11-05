@@ -35,20 +35,20 @@ export default async function DashboardPage() {
   const thisMonthPrefix = todayStr.slice(0, 7);
 
   // General & Financial Stats
-  const totalCustomers = (db.prepare(`SELECT COUNT(*) as c FROM customers`).get() as any).c;
-  const todayCustomers = (db.prepare(`SELECT COUNT(*) as c FROM customers WHERE registration_date = ?`).get(todayStr) as any).c;
+  const totalCustomers = ((await db.prepare(`SELECT COUNT(*) as c FROM customers`).get()) as any)?.c || 0;
+  const todayCustomers = ((await db.prepare(`SELECT COUNT(*) as c FROM customers WHERE registration_date = ?`).get(todayStr)) as any)?.c || 0;
 
-  const totalOrders = (db.prepare(`SELECT COUNT(*) as c FROM orders`).get() as any).c;
-  const pendingOrders = (db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status IN ('New', 'Processing', 'Ordered from Supplier')`).get() as any).c;
-  const readyOrders = (db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status = 'Ready for Delivery'`).get() as any).c;
-  const completedOrders = (db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status = 'Delivered'`).get() as any).c;
+  const totalOrders = ((await db.prepare(`SELECT COUNT(*) as c FROM orders`).get()) as any)?.c || 0;
+  const pendingOrders = ((await db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status IN ('New', 'Processing', 'Ordered from Supplier')`).get()) as any)?.c || 0;
+  const readyOrders = ((await db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status = 'Ready for Delivery'`).get()) as any)?.c || 0;
+  const completedOrders = ((await db.prepare(`SELECT COUNT(*) as c FROM orders WHERE status = 'Delivered'`).get()) as any)?.c || 0;
 
-  const totalProducts = (db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active'`).get() as any).c;
-  const lowStockProducts = (db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get() as any).c;
+  const totalProducts = ((await db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active'`).get()) as any)?.c || 0;
+  const lowStockProducts = ((await db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get()) as any)?.c || 0;
 
   // Staff specific stats
-  const staffCustomersAdded = (db.prepare(`SELECT COUNT(*) as c FROM customers WHERE created_by = ?`).get(user.id) as any).c;
-  const staffOrdersCreated = (db.prepare(`SELECT COUNT(*) as c FROM orders WHERE created_by = ?`).get(user.id) as any).c;
+  const staffCustomersAdded = ((await db.prepare(`SELECT COUNT(*) as c FROM customers WHERE created_by = ?`).get(user.id)) as any)?.c || 0;
+  const staffOrdersCreated = ((await db.prepare(`SELECT COUNT(*) as c FROM orders WHERE created_by = ?`).get(user.id)) as any)?.c || 0;
 
   // Revenue stats (Admin only)
   let todaySales = 0;
@@ -56,13 +56,13 @@ export default async function DashboardPage() {
   let totalOutstanding = 0;
 
   if (isAdmin) {
-    todaySales = (db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date = ? AND status != 'Cancelled'`).get(todayStr) as any).s;
-    monthlySales = (db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisMonthPrefix}%`) as any).s;
-    totalOutstanding = (db.prepare(`SELECT COALESCE(SUM(remaining_balance), 0) as s FROM orders WHERE status != 'Cancelled'`).get() as any).s;
+    todaySales = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date = ? AND status != 'Cancelled'`).get(todayStr)) as any)?.s || 0;
+    monthlySales = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisMonthPrefix}%`)) as any)?.s || 0;
+    totalOutstanding = ((await db.prepare(`SELECT COALESCE(SUM(remaining_balance), 0) as s FROM orders WHERE status != 'Cancelled'`).get()) as any)?.s || 0;
   }
 
   // Recent Orders
-  const recentOrders = db
+  const recentOrders = ((await db
     .prepare(
       `
       SELECT o.*, c.name as customer_name, c.mobile as customer_mobile
@@ -71,10 +71,10 @@ export default async function DashboardPage() {
       ORDER BY o.id DESC LIMIT 5
     `
     )
-    .all() as any[];
+    .all()) as any[]) || [];
 
   // Recent Customers
-  const recentCustomers = db
+  const recentCustomers = ((await db
     .prepare(
       `
       SELECT c.*, (SELECT COUNT(*) FROM prescriptions p WHERE p.customer_id = c.id) as rx_count
@@ -82,10 +82,10 @@ export default async function DashboardPage() {
       ORDER BY c.id DESC LIMIT 5
     `
     )
-    .all() as any[];
+    .all()) as any[]) || [];
 
   // Pending Deliveries & Follow-ups
-  const pendingFollowups = db
+  const pendingFollowups = ((await db
     .prepare(
       `
       SELECT f.*, c.name as customer_name, c.mobile as customer_mobile
@@ -95,10 +95,10 @@ export default async function DashboardPage() {
       ORDER BY f.scheduled_date ASC LIMIT 5
     `
     )
-    .all() as any[];
+    .all()) as any[]) || [];
 
   // Low Stock Items
-  const lowStockItems = db
+  const lowStockItems = ((await db
     .prepare(
       `
       SELECT * FROM products
@@ -106,17 +106,17 @@ export default async function DashboardPage() {
       ORDER BY stock_quantity ASC LIMIT 4
     `
     )
-    .all() as any[];
+    .all()) as any[]) || [];
 
   // Recent Activities
-  const recentActivities = db
+  const recentActivities = ((await db
     .prepare(
       `
       SELECT * FROM activity_logs
       ORDER BY id DESC LIMIT 6
     `
     )
-    .all() as any[];
+    .all()) as any[]) || [];
 
   return (
     <div className="space-y-6">

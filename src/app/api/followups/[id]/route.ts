@@ -17,14 +17,14 @@ export async function PUT(
     const body = await req.json();
     const { status, scheduled_date, notes, priority } = body;
 
-    const existing = db.prepare(`SELECT * FROM followups WHERE id = ?`).get(followupId) as any;
+    const existing = (await db.prepare(`SELECT * FROM followups WHERE id = ?`).get(followupId)) as any;
     if (!existing) {
       return NextResponse.json({ error: "Followup not found" }, { status: 404 });
     }
 
     const completedAt = status === "Completed" ? new Date().toISOString() : null;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE followups SET
         status = COALESCE(?, status),
         scheduled_date = COALESCE(?, scheduled_date),
@@ -34,7 +34,7 @@ export async function PUT(
       WHERE id = ?
     `).run(status, scheduled_date, notes, priority, completedAt, followupId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Followup Updated",
@@ -43,7 +43,7 @@ export async function PUT(
       details: `Followup marked as ${status || existing.status}`,
     });
 
-    const updated = db.prepare(`SELECT * FROM followups WHERE id = ?`).get(followupId);
+    const updated = await db.prepare(`SELECT * FROM followups WHERE id = ?`).get(followupId);
     return NextResponse.json({ success: true, followup: updated });
   } catch (err: any) {
     console.error("Followup PUT error:", err);
@@ -62,7 +62,7 @@ export async function DELETE(
     }
 
     const followupId = parseInt(params.id);
-    db.prepare(`DELETE FROM followups WHERE id = ?`).run(followupId);
+    await db.prepare(`DELETE FROM followups WHERE id = ?`).run(followupId);
     return NextResponse.json({ success: true, message: "Followup deleted" });
   } catch (err: any) {
     console.error("Followup DELETE error:", err);

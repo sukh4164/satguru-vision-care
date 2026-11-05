@@ -39,11 +39,11 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY p.stock_quantity <= p.min_stock_alert DESC, p.id DESC`;
 
-    const products = db.prepare(query).all(...params);
+    const products = await db.prepare(query).all(...params);
 
     // Summary counts
-    const totalCount = db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active'`).get() as { c: number };
-    const lowStockCount = db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get() as { c: number };
+    const totalCount = ((await db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active'`).get()) as any) || { c: 0 };
+    const lowStockCount = ((await db.prepare(`SELECT COUNT(*) as c FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get()) as any) || { c: 0 };
 
     return NextResponse.json({
       success: true,
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Auto-generate Product Code: SVC-PRD-xxxx
-    const maxRow = db.prepare(`SELECT MAX(id) as max_id FROM products`).get() as { max_id: number | null };
+    const maxRow = ((await db.prepare(`SELECT MAX(id) as max_id FROM products`).get()) as unknown) as { max_id: number | null };
     const nextSeq = (maxRow?.max_id || 0) + 1001;
     const productCode = `SVC-PRD-${nextSeq}`;
     const cleanSku = sku ? sku.trim().toUpperCase() : `${brand ? brand.slice(0, 3).toUpperCase() : "SVC"}-${nextSeq}`;
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     const initialQty = parseInt(stock_quantity || "0");
     const minAlert = parseInt(min_stock_alert || "5");
 
-    const insertResult = db.prepare(`
+    const insertResult = await db.prepare(`
       INSERT INTO products (
         product_code, sku, name, brand, category_name, model_number,
         purchase_price, selling_price, stock_quantity, min_stock_alert,
@@ -119,14 +119,14 @@ export async function POST(req: NextRequest) {
 
     // Log initial stock transaction if quantity > 0
     if (initialQty > 0) {
-      db.prepare(`
+      await db.prepare(`
         INSERT INTO inventory_transactions (
           product_id, transaction_type, quantity, balance_after, notes, created_by
         ) VALUES (?, 'IN', ?, ?, 'Initial inventory batch setup', ?)
       `).run(productId, initialQty, initialQty, user.id);
     }
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Product Added",
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       details: `Added new product ${name} (${brand || "Generic"}) with stock ${initialQty}`,
     });
 
-    const newProduct = db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId);
+    const newProduct = await db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId);
 
     return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
   } catch (err: any) {
@@ -143,4 +143,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }
 }
-

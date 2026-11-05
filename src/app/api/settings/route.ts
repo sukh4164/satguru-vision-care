@@ -5,7 +5,7 @@ import { logActivity } from "@/lib/logger";
 
 export async function GET() {
   try {
-    const settings = db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
+    const settings = await db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
     return NextResponse.json({ success: true, settings });
   } catch (err: any) {
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest) {
       business_hours,
     } = body;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE store_settings SET
         store_name = COALESCE(?, store_name),
         tagline = COALESCE(?, tagline),
@@ -75,7 +75,7 @@ export async function PUT(req: NextRequest) {
       business_hours?.trim()
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Settings Updated",
@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
       details: "Store profile, GSTIN, and billing settings updated",
     });
 
-    const updated = db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
+    const updated = await db.prepare(`SELECT * FROM store_settings LIMIT 1`).get();
     return NextResponse.json({ success: true, settings: updated });
   } catch (err: any) {
     console.error("Settings PUT error:", err);

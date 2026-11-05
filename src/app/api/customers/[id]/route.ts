@@ -17,7 +17,7 @@ export async function GET(
     const customerId = params.id;
 
     // Fetch customer profile
-    const customer = db
+    const customer = (await db
       .prepare(
         `
         SELECT c.*, u.name as created_by_name
@@ -26,14 +26,14 @@ export async function GET(
         WHERE c.id = ? OR c.customer_code = ?
       `
       )
-      .get(customerId, customerId) as any;
+      .get(customerId, customerId)) as any;
 
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
     // Fetch all prescriptions in descending order (latest first)
-    const prescriptions = db
+    const prescriptions = await db
       .prepare(
         `
         SELECT p.*, u.name as creator_name
@@ -46,7 +46,7 @@ export async function GET(
       .all(customer.id);
 
     // Fetch all orders
-    const orders = db
+    const orders = await db
       .prepare(
         `
         SELECT o.*, u.name as creator_name, p.prescription_code
@@ -60,7 +60,7 @@ export async function GET(
       .all(customer.id);
 
     // Fetch all invoices
-    const invoices = db
+    const invoices = await db
       .prepare(
         `
         SELECT i.*, o.order_code
@@ -73,7 +73,7 @@ export async function GET(
       .all(customer.id);
 
     // Fetch all payments
-    const payments = db
+    const payments = await db
       .prepare(
         `
         SELECT p.*, u.name as receiver_name, o.order_code, i.invoice_code
@@ -88,7 +88,7 @@ export async function GET(
       .all(customer.id);
 
     // Fetch follow-ups
-    const followups = db
+    const followups = await db
       .prepare(
         `
         SELECT f.*, u.name as creator_name
@@ -101,7 +101,7 @@ export async function GET(
       .all(customer.id);
 
     // Aggregates
-    const stats = db
+    const stats = await db
       .prepare(
         `
         SELECT 
@@ -163,7 +163,7 @@ export async function PUT(
     const cleanMobile = mobile ? mobile.replace(/[^0-9]/g, "") : null;
     const calculatedAge = dob ? calculateAge(dob) : body.age || null;
 
-    db.prepare(
+    await db.prepare(
       `
       UPDATE customers SET
         name = COALESCE(?, name),
@@ -195,7 +195,7 @@ export async function PUT(
       customerId
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Customer Updated",
@@ -204,7 +204,7 @@ export async function PUT(
       details: `Updated details for customer ${name || customerId}`,
     });
 
-    const updated = db.prepare(`SELECT * FROM customers WHERE id = ?`).get(customerId);
+    const updated = await db.prepare(`SELECT * FROM customers WHERE id = ?`).get(customerId);
     return NextResponse.json({ success: true, customer: updated });
   } catch (err: any) {
     console.error("Customer PUT error:", err);
@@ -223,16 +223,16 @@ export async function DELETE(
     }
 
     const customerId = parseInt(params.id);
-    const customer = db.prepare(`SELECT * FROM customers WHERE id = ?`).get(customerId) as any;
+    const customer = (await db.prepare(`SELECT * FROM customers WHERE id = ?`).get(customerId)) as any;
 
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
     // Check if customer has active orders
-    const orderCount = db
+    const orderCount = ((await db
       .prepare(`SELECT COUNT(*) as count FROM orders WHERE customer_id = ? AND status NOT IN ('Delivered', 'Cancelled')`)
-      .get(customerId) as { count: number };
+      .get(customerId)) as unknown) as { count: number };
 
     if (orderCount.count > 0) {
       return NextResponse.json(
@@ -241,9 +241,9 @@ export async function DELETE(
       );
     }
 
-    db.prepare(`DELETE FROM customers WHERE id = ?`).run(customerId);
+    await db.prepare(`DELETE FROM customers WHERE id = ?`).run(customerId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Customer Deleted",
@@ -258,4 +258,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete customer" }, { status: 500 });
   }
 }
-

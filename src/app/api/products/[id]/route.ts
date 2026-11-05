@@ -14,16 +14,16 @@ export async function GET(
     }
 
     const productId = params.id;
-    const product = db
+    const product = (await db
       .prepare(`SELECT * FROM products WHERE id = ? OR product_code = ? OR sku = ?`)
-      .get(productId, productId, productId) as any;
+      .get(productId, productId, productId)) as any;
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // Transactions log
-    const transactions = db
+    const transactions = await db
       .prepare(
         `
         SELECT t.*, u.name as staff_name
@@ -53,7 +53,7 @@ export async function PUT(
     }
 
     const productId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId) as any;
+    const existing = (await db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId)) as any;
 
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -72,7 +72,7 @@ export async function PUT(
       description,
     } = body;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE products SET
         name = COALESCE(?, name),
         brand = COALESCE(?, brand),
@@ -98,7 +98,7 @@ export async function PUT(
       productId
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Product Updated",
@@ -107,7 +107,7 @@ export async function PUT(
       details: `Updated details for ${existing.name}`,
     });
 
-    const updated = db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId);
+    const updated = await db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId);
     return NextResponse.json({ success: true, product: updated });
   } catch (err: any) {
     console.error("Product PUT error:", err);
@@ -126,16 +126,16 @@ export async function DELETE(
     }
 
     const productId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId) as any;
+    const existing = (await db.prepare(`SELECT * FROM products WHERE id = ?`).get(productId)) as any;
 
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // Soft delete product by setting status = 'deleted'
-    db.prepare(`UPDATE products SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(productId);
+    await db.prepare(`UPDATE products SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(productId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Product Deleted",
@@ -150,4 +150,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }
-

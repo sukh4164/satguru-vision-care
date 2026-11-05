@@ -53,10 +53,10 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY i.id DESC`;
 
-    const invoices = db.prepare(query).all(...params);
+    const invoices = await db.prepare(query).all(...params);
 
     // Summary totals
-    const summary = db.prepare(`
+    const summary = await db.prepare(`
       SELECT 
         COUNT(*) as total_invoices,
         COALESCE(SUM(grand_total), 0) as total_billed,

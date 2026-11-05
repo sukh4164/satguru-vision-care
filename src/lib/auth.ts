@@ -49,8 +49,8 @@ export async function verifyToken(token: string) {
   }
 }
 
-export function getUserWithPermissions(userId: number): SessionUser | null {
-  const user = db
+export async function getUserWithPermissions(userId: number): Promise<SessionUser | null> {
+  const user = (await db
     .prepare(
       `
       SELECT u.id, u.employee_id, u.name, u.username, u.email, u.role_id, u.status, r.name as role_name
@@ -59,7 +59,7 @@ export function getUserWithPermissions(userId: number): SessionUser | null {
       WHERE u.id = ? AND u.status = 'active'
     `
     )
-    .get(userId) as
+    .get(userId)) as
     | {
         id: number;
         employee_id: string;
@@ -75,24 +75,24 @@ export function getUserWithPermissions(userId: number): SessionUser | null {
   if (!user) return null;
 
   // Base permissions from role
-  const rolePerms = db
+  const rolePerms = ((await db
     .prepare(
       `
       SELECT permission_code FROM role_permissions WHERE role_id = ?
     `
     )
-    .all(user.role_id) as { permission_code: string }[];
+    .all(user.role_id)) as unknown) as { permission_code: string }[];
 
   const permSet = new Set(rolePerms.map((rp) => rp.permission_code));
 
   // Custom user overrides
-  const userOverrides = db
+  const userOverrides = ((await db
     .prepare(
       `
       SELECT permission_code, granted FROM user_permissions WHERE user_id = ?
     `
     )
-    .all(user.id) as { permission_code: string; granted: number }[];
+    .all(user.id)) as unknown) as { permission_code: string; granted: number }[];
 
   userOverrides.forEach((o) => {
     if (o.granted === 1) {
@@ -122,7 +122,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const verified = await verifyToken(token);
   if (!verified?.id) return null;
 
-  return getUserWithPermissions(verified.id);
+  return await getUserWithPermissions(verified.id);
 }
 
 export function hasPermission(user: SessionUser | null, permissionCode: string): boolean {
@@ -130,4 +130,3 @@ export function hasPermission(user: SessionUser | null, permissionCode: string):
   if (user.role === "admin") return true; // Admin has universal access
   return user.permissions.includes(permissionCode);
 }
-

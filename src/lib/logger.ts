@@ -1,6 +1,6 @@
 import { db } from "./db";
 
-export function logActivity({
+export async function logActivity({
   userId,
   userName,
   action,
@@ -18,22 +18,23 @@ export function logActivity({
   ipAddress?: string | null;
 }) {
   try {
-    db.prepare(
+    await db
+      .prepare(
+        `
+        INSERT INTO activity_logs (user_id, user_name, action, entity_type, entity_id, details, ip_address)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `
-      INSERT INTO activity_logs (user_id, user_name, action, entity_type, entity_id, details, ip_address)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `
-    ).run(
-      userId || null,
-      userName || "System",
-      action,
-      entityType,
-      entityId ? String(entityId) : null,
-      details || null,
-      ipAddress || null
-    );
+      )
+      .run(
+        userId || null,
+        userName || "System",
+        action,
+        entityType,
+        entityId ? String(entityId) : null,
+        details || null,
+        ipAddress || null
+      );
   } catch (err) {
     console.error("Failed to log activity:", err);
   }
 }
-

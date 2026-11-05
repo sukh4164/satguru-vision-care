@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const staffId = parseInt(params.id);
-    const member = db
+    const member = (await db
       .prepare(
         `
         SELECT 
@@ -25,14 +25,14 @@ export async function GET(
         WHERE u.id = ?
       `
       )
-      .get(staffId) as any;
+      .get(staffId)) as any;
 
     if (!member) {
       return NextResponse.json({ error: "Staff user not found" }, { status: 404 });
     }
 
     // Recent activity of this staff member
-    const activities = db
+    const activities = await db
       .prepare(`SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`)
       .all(staffId);
 
@@ -50,11 +50,11 @@ export async function PUT(
   try {
     const user = await getCurrentUser();
     if (!user || !hasPermission(user, "admin.staff")) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      return NextResponse.json({ error: "Access denied: Missing admin permission" }, { status: 403 });
     }
 
     const staffId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM users WHERE id = ?`).get(staffId) as any;
+    const existing = (await db.prepare(`SELECT * FROM users WHERE id = ?`).get(staffId)) as any;
     if (!existing) {
       return NextResponse.json({ error: "Staff user not found" }, { status: 404 });
     }
@@ -64,7 +64,7 @@ export async function PUT(
 
     let roleId = existing.role_id;
     if (role) {
-      const roleRow = db.prepare(`SELECT id FROM roles WHERE name = ?`).get(role) as any;
+      const roleRow = (await db.prepare(`SELECT id FROM roles WHERE name = ?`).get(role)) as any;
       if (roleRow) roleId = roleRow.id;
     }
 
@@ -73,7 +73,7 @@ export async function PUT(
       passwordHash = await hashPassword(newPassword);
     }
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE users SET
         name = COALESCE(?, name),
         email = COALESCE(?, email),
@@ -93,7 +93,7 @@ export async function PUT(
       staffId
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Staff Updated",
@@ -102,7 +102,7 @@ export async function PUT(
       details: `Updated details / permissions for ${existing.name}`,
     });
 
-    const updated = db.prepare(`SELECT id, employee_id, name, username, email, mobile, status FROM users WHERE id = ?`).get(staffId);
+    const updated = await db.prepare(`SELECT id, employee_id, name, username, email, mobile, status FROM users WHERE id = ?`).get(staffId);
     return NextResponse.json({ success: true, user: updated });
   } catch (err: any) {
     console.error("Staff PUT error:", err);
@@ -126,9 +126,9 @@ export async function DELETE(
     }
 
     // Set to inactive instead of hard delete to preserve historical customer and order references
-    db.prepare(`UPDATE users SET status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(staffId);
+    await db.prepare(`UPDATE users SET status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(staffId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Staff Deactivated",
@@ -143,4 +143,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to deactivate staff" }, { status: 500 });
   }
 }
-

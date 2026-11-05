@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     query += ` ORDER BY c.id DESC LIMIT ?`;
     params.push(limit);
 
-    const customers = db.prepare(query).all(...params);
+    const customers = await db.prepare(query).all(...params);
 
     return NextResponse.json({ success: true, customers });
   } catch (err: any) {
@@ -91,11 +91,11 @@ export async function POST(req: NextRequest) {
     const cleanMobile = mobile.replace(/[^0-9]/g, "");
 
     // Duplicate check on mobile number
-    const existing = db
+    const existing = (await db
       .prepare(
         `SELECT id, customer_code, name, mobile, registration_date FROM customers WHERE mobile = ? OR mobile LIKE ?`
       )
-      .get(cleanMobile, `%${cleanMobile.slice(-10)}%`) as any;
+      .get(cleanMobile, `%${cleanMobile.slice(-10)}%`)) as any;
 
     if (existing && checkDuplicateOnly) {
       return NextResponse.json({
@@ -117,16 +117,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Auto-generate Customer Code: SVC-CUST-xxxx
-    const maxRow = db
+    const maxRow = ((await db
       .prepare(`SELECT MAX(id) as max_id FROM customers`)
-      .get() as { max_id: number | null };
+      .get()) as unknown) as { max_id: number | null };
     const nextSeq = (maxRow?.max_id || 0) + 1001;
     const customerCode = `SVC-CUST-${nextSeq}`;
 
     const calculatedAge = dob ? calculateAge(dob) : body.age || null;
     const regDate = registration_date || new Date().toISOString().split("T")[0];
 
-    const insertResult = db
+    const insertResult = await db
       .prepare(
         `
         INSERT INTO customers (
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     const newId = insertResult.lastInsertRowid;
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Customer Added",
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
       details: `Registered customer ${name} (${cleanMobile})`,
     });
 
-    const newCustomer = db.prepare(`SELECT * FROM customers WHERE id = ?`).get(newId);
+    const newCustomer = await db.prepare(`SELECT * FROM customers WHERE id = ?`).get(newId);
 
     return NextResponse.json({ success: true, customer: newCustomer }, { status: 201 });
   } catch (err: any) {

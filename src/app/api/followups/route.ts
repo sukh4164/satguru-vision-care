@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY f.scheduled_date ASC, f.id DESC`;
 
-    const followups = db.prepare(query).all(...params);
+    const followups = await db.prepare(query).all(...params);
 
     return NextResponse.json({ success: true, followups });
   } catch (err: any) {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Customer, type and scheduled date are required" }, { status: 400 });
     }
 
-    const insertResult = db.prepare(`
+    const insertResult = await db.prepare(`
       INSERT INTO followups (
         customer_id, order_id, type, scheduled_date, status, priority, notes, created_by
       ) VALUES (?, ?, ?, ?, 'Pending', ?, ?, ?)
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       user.id
     );
 
-    const newFollowup = db.prepare(`SELECT * FROM followups WHERE id = ?`).get(insertResult.lastInsertRowid);
+    const newFollowup = await db.prepare(`SELECT * FROM followups WHERE id = ?`).get(insertResult.lastInsertRowid);
     return NextResponse.json({ success: true, followup: newFollowup }, { status: 201 });
   } catch (err: any) {
     console.error("Followup POST error:", err);

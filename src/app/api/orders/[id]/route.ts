@@ -15,7 +15,7 @@ export async function GET(
 
     const orderId = params.id;
 
-    const order = db
+    const order = (await db
       .prepare(
         `
         SELECT 
@@ -42,14 +42,14 @@ export async function GET(
         WHERE o.id = ? OR o.order_code = ?
       `
       )
-      .get(orderId, orderId) as any;
+      .get(orderId, orderId)) as any;
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     // Payments for this order
-    const payments = db
+    const payments = await db
       .prepare(
         `
         SELECT p.*, u.name as receiver_name
@@ -79,7 +79,7 @@ export async function PUT(
     }
 
     const orderId = parseInt(params.id);
-    const existing = db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId) as any;
+    const existing = (await db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId)) as any;
 
     if (!existing) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -88,7 +88,7 @@ export async function PUT(
     const body = await req.json();
     const { expected_delivery_date, order_notes, frame_details, lens_details } = body;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE orders SET
         expected_delivery_date = COALESCE(?, expected_delivery_date),
         order_notes = COALESCE(?, order_notes),
@@ -98,7 +98,7 @@ export async function PUT(
       WHERE id = ?
     `).run(expected_delivery_date, order_notes, frame_details, lens_details, orderId);
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Order Updated",
@@ -107,11 +107,10 @@ export async function PUT(
       details: `Updated order details for ${existing.order_code}`,
     });
 
-    const updated = db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId);
+    const updated = await db.prepare(`SELECT * FROM orders WHERE id = ?`).get(orderId);
     return NextResponse.json({ success: true, order: updated });
   } catch (err: any) {
     console.error("Order PUT error:", err);
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 }
-

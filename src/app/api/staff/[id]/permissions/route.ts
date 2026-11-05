@@ -15,24 +15,24 @@ export async function GET(
     }
 
     const staffId = parseInt(params.id);
-    const targetUser = db
+    const targetUser = (await db
       .prepare(`SELECT u.id, u.name, u.role_id, r.name as role_name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?`)
-      .get(staffId) as any;
+      .get(staffId)) as any;
 
     if (!targetUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Role default permissions
-    const rolePerms = db
+    const rolePerms = (((await db
       .prepare(`SELECT permission_code FROM role_permissions WHERE role_id = ?`)
-      .all(targetUser.role_id) as { permission_code: string }[];
+      .all(targetUser.role_id)) as unknown) as { permission_code: string }[]) || [];
     const roleSet = new Set(rolePerms.map((rp) => rp.permission_code));
 
     // Custom overrides
-    const overrides = db
+    const overrides = (((await db
       .prepare(`SELECT permission_code, granted FROM user_permissions WHERE user_id = ?`)
-      .all(staffId) as { permission_code: string; granted: number }[];
+      .all(staffId)) as unknown) as { permission_code: string; granted: number }[]) || [];
     const overrideMap = new Map<string, boolean>();
     overrides.forEach((o) => overrideMap.set(o.permission_code, o.granted === 1));
 
@@ -82,28 +82,23 @@ export async function PUT(
       return NextResponse.json({ error: "Permissions array required" }, { status: 400 });
     }
 
-    const targetUser = db.prepare(`SELECT name, employee_id FROM users WHERE id = ?`).get(staffId) as any;
+    const targetUser = (await db.prepare(`SELECT name, employee_id FROM users WHERE id = ?`).get(staffId)) as any;
     if (!targetUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const saveTx = db.transaction(() => {
-      // Clear previous custom overrides
-      db.prepare(`DELETE FROM user_permissions WHERE user_id = ?`).run(staffId);
+    // Clear previous custom overrides
+    await db.prepare(`DELETE FROM user_permissions WHERE user_id = ?`).run(staffId);
 
-      const insertOverride = db.prepare(`
+    // Insert new custom overrides
+    for (const p of permissions as { code: string; granted: boolean }[]) {
+      await db.prepare(`
         INSERT INTO user_permissions (user_id, permission_code, granted)
         VALUES (?, ?, ?)
-      `);
+      `).run(staffId, p.code, p.granted ? 1 : 0);
+    }
 
-      permissions.forEach((p: { code: string; granted: boolean }) => {
-        insertOverride.run(staffId, p.code, p.granted ? 1 : 0);
-      });
-    });
-
-    saveTx();
-
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Permissions Updated",
@@ -118,4 +113,3 @@ export async function PUT(
     return NextResponse.json({ error: "Failed to update permissions" }, { status: 500 });
   }
 }
-

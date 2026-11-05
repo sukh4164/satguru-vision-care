@@ -20,17 +20,17 @@ export async function GET(req: NextRequest) {
     let rx2: any = null;
 
     if (rx1Id && rx2Id) {
-      rx1 = db.prepare(`SELECT p.*, c.name as customer_name, c.customer_code FROM prescriptions p JOIN customers c ON p.customer_id = c.id WHERE p.id = ?`).get(rx1Id);
-      rx2 = db.prepare(`SELECT p.*, c.name as customer_name, c.customer_code FROM prescriptions p JOIN customers c ON p.customer_id = c.id WHERE p.id = ?`).get(rx2Id);
+      rx1 = await db.prepare(`SELECT p.*, c.name as customer_name, c.customer_code FROM prescriptions p JOIN customers c ON p.customer_id = c.id WHERE p.id = ?`).get(rx1Id);
+      rx2 = await db.prepare(`SELECT p.*, c.name as customer_name, c.customer_code FROM prescriptions p JOIN customers c ON p.customer_id = c.id WHERE p.id = ?`).get(rx2Id);
     } else if (customerId) {
-      const rows = db.prepare(`
+      const rows = ((await db.prepare(`
         SELECT p.*, c.name as customer_name, c.customer_code 
         FROM prescriptions p 
         JOIN customers c ON p.customer_id = c.id 
         WHERE p.customer_id = ? 
         ORDER BY p.prescription_date DESC, p.id DESC 
         LIMIT 2
-      `).all(customerId) as any[];
+      `).all(customerId)) as unknown) as any[];
 
       rx1 = rows[0] || null; // Latest
       rx2 = rows[1] || null; // Previous

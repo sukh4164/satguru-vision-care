@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Quantity must be a positive number" }, { status: 400 });
     }
 
-    const product = db.prepare(`SELECT * FROM products WHERE id = ?`).get(product_id) as any;
+    const product = (await db.prepare(`SELECT * FROM products WHERE id = ?`).get(product_id)) as any;
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
@@ -40,20 +40,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid transaction type" }, { status: 400 });
     }
 
-    // Execute within a database transaction
-    const updateTx = db.transaction(() => {
-      db.prepare(`UPDATE products SET stock_quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(newStock, product.id);
+    // Execute stock update and transaction log
+    await db.prepare(`UPDATE products SET stock_quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(newStock, product.id);
 
-      db.prepare(`
-        INSERT INTO inventory_transactions (
-          product_id, transaction_type, quantity, balance_after, reference_id, notes, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(product.id, transaction_type, qty, newStock, reference_id || null, notes || null, user.id);
-    });
+    await db.prepare(`
+      INSERT INTO inventory_transactions (
+        product_id, transaction_type, quantity, balance_after, reference_id, notes, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(product.id, transaction_type, qty, newStock, reference_id || null, notes || null, user.id);
 
-    updateTx();
-
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Stock Adjusted",
@@ -62,11 +58,10 @@ export async function POST(req: NextRequest) {
       details: `${transaction_type}: ${qty} units of ${product.name}. New balance: ${newStock}`,
     });
 
-    const updatedProduct = db.prepare(`SELECT * FROM products WHERE id = ?`).get(product.id);
+    const updatedProduct = await db.prepare(`SELECT * FROM products WHERE id = ?`).get(product.id);
     return NextResponse.json({ success: true, product: updatedProduct, newStock });
   } catch (err: any) {
     console.error("Stock update error:", err);
     return NextResponse.json({ error: "Failed to update stock" }, { status: 500 });
   }
 }
-

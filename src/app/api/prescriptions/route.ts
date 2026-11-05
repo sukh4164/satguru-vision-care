@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY p.prescription_date DESC, p.id DESC`;
 
-    const prescriptions = db.prepare(query).all(...params);
+    const prescriptions = await db.prepare(query).all(...params);
 
     return NextResponse.json({ success: true, prescriptions });
   } catch (err: any) {
@@ -90,19 +90,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Customer ID is required" }, { status: 400 });
     }
 
-    const customer = db.prepare(`SELECT id, name, mobile, customer_code FROM customers WHERE id = ?`).get(customer_id) as any;
+    const customer = (await db.prepare(`SELECT id, name, mobile, customer_code FROM customers WHERE id = ?`).get(customer_id)) as any;
     if (!customer) {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
     // Auto-generate Prescription Code: SVC-RX-xxxx
-    const maxRow = db.prepare(`SELECT MAX(id) as max_id FROM prescriptions`).get() as { max_id: number | null };
+    const maxRow = ((await db.prepare(`SELECT MAX(id) as max_id FROM prescriptions`).get()) as unknown) as { max_id: number | null };
     const nextSeq = (maxRow?.max_id || 0) + 1001;
     const prescriptionCode = `SVC-RX-${nextSeq}`;
 
     const dateVal = prescription_date || new Date().toISOString().split("T")[0];
 
-    const insertResult = db.prepare(`
+    const insertResult = await db.prepare(`
       INSERT INTO prescriptions (
         prescription_code, customer_id, prescription_date, next_checkup_date,
         doctor_name, prescription_type,
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
 
     // Create automatic next checkup reminder if next_checkup_date is provided
     if (next_checkup_date) {
-      db.prepare(`
+      await db.prepare(`
         INSERT INTO followups (
           customer_id, type, scheduled_date, status, priority, notes, created_by
         ) VALUES (?, 'Eye Checkup', ?, 'Pending', 'Medium', ?, ?)
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Prescription Created",
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
       details: `Created new eye prescription for ${customer.name} (OD: ${od_sph}/${od_cyl}, OS: ${os_sph}/${os_cyl})`,
     });
 
-    const newPrescription = db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(newId);
+    const newPrescription = await db.prepare(`SELECT * FROM prescriptions WHERE id = ?`).get(newId);
 
     return NextResponse.json({ success: true, prescription: newPrescription }, { status: 201 });
   } catch (err: any) {
@@ -167,4 +167,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create prescription" }, { status: 500 });
   }
 }
-

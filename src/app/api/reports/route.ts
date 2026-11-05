@@ -16,16 +16,16 @@ export async function GET(req: NextRequest) {
     const thisYearPrefix = todayStr.slice(0, 4); // 'YYYY'
 
     // Total counts
-    const totalCustomers = db.prepare(`SELECT COUNT(*) as count FROM customers`).get() as { count: number };
-    const todayCustomers = db.prepare(`SELECT COUNT(*) as count FROM customers WHERE registration_date = ?`).get(todayStr) as { count: number };
+    const totalCustomers = ((await db.prepare(`SELECT COUNT(*) as count FROM customers`).get()) as any) || { count: 0 };
+    const todayCustomers = ((await db.prepare(`SELECT COUNT(*) as count FROM customers WHERE registration_date = ?`).get(todayStr)) as any) || { count: 0 };
 
-    const totalOrders = db.prepare(`SELECT COUNT(*) as count FROM orders`).get() as { count: number };
-    const pendingOrders = db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status IN ('New', 'Processing', 'Ordered from Supplier')`).get() as { count: number };
-    const readyOrders = db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status = 'Ready for Delivery'`).get() as { count: number };
-    const completedOrders = db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status = 'Delivered'`).get() as { count: number };
+    const totalOrders = ((await db.prepare(`SELECT COUNT(*) as count FROM orders`).get()) as any) || { count: 0 };
+    const pendingOrders = ((await db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status IN ('New', 'Processing', 'Ordered from Supplier')`).get()) as any) || { count: 0 };
+    const readyOrders = ((await db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status = 'Ready for Delivery'`).get()) as any) || { count: 0 };
+    const completedOrders = ((await db.prepare(`SELECT COUNT(*) as count FROM orders WHERE status = 'Delivered'`).get()) as any) || { count: 0 };
 
-    const totalProducts = db.prepare(`SELECT COUNT(*) as count FROM products WHERE status = 'active'`).get() as { count: number };
-    const lowStockProducts = db.prepare(`SELECT COUNT(*) as count FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get() as { count: number };
+    const totalProducts = ((await db.prepare(`SELECT COUNT(*) as count FROM products WHERE status = 'active'`).get()) as any) || { count: 0 };
+    const lowStockProducts = ((await db.prepare(`SELECT COUNT(*) as count FROM products WHERE status = 'active' AND stock_quantity <= min_stock_alert`).get()) as any) || { count: 0 };
 
     // Financial stats (Admin sees all; Staff only if granted admin.revenue)
     const canSeeRevenue = user.role === "admin" || hasPermission(user, "admin.revenue");
@@ -37,24 +37,24 @@ export async function GET(req: NextRequest) {
     let totalOutstanding = 0;
 
     if (canSeeRevenue) {
-      const todaySalesRow = db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date = ? AND status != 'Cancelled'`).get(todayStr) as { s: number };
+      const todaySalesRow = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date = ? AND status != 'Cancelled'`).get(todayStr)) as any) || { s: 0 };
       todaySales = todaySalesRow.s;
 
-      const monthSalesRow = db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisMonthPrefix}%`) as { s: number };
+      const monthSalesRow = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisMonthPrefix}%`)) as any) || { s: 0 };
       monthlySales = monthSalesRow.s;
 
-      const yearSalesRow = db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisYearPrefix}%`) as { s: number };
+      const yearSalesRow = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE order_date LIKE ? AND status != 'Cancelled'`).get(`${thisYearPrefix}%`)) as any) || { s: 0 };
       yearlySales = yearSalesRow.s;
 
-      const totalRevRow = db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE status != 'Cancelled'`).get() as { s: number };
+      const totalRevRow = ((await db.prepare(`SELECT COALESCE(SUM(grand_total), 0) as s FROM orders WHERE status != 'Cancelled'`).get()) as any) || { s: 0 };
       totalRevenue = totalRevRow.s;
 
-      const outRow = db.prepare(`SELECT COALESCE(SUM(remaining_balance), 0) as b FROM orders WHERE status != 'Cancelled'`).get() as { b: number };
+      const outRow = ((await db.prepare(`SELECT COALESCE(SUM(remaining_balance), 0) as b FROM orders WHERE status != 'Cancelled'`).get()) as any) || { b: 0 };
       totalOutstanding = outRow.b;
     }
 
     // Sales Progression Trend (Last 7 days or monthly)
-    const salesTrend = db.prepare(`
+    const salesTrendRows = await db.prepare(`
       SELECT 
         order_date,
         COUNT(id) as orders_count,
@@ -64,10 +64,11 @@ export async function GET(req: NextRequest) {
       GROUP BY order_date
       ORDER BY order_date DESC
       LIMIT 14
-    `).all().reverse();
+    `).all();
+    const salesTrend = [...salesTrendRows].reverse();
 
     // Monthly revenue composition (by product category)
-    const categoryBreakdown = db.prepare(`
+    const categoryBreakdown = await db.prepare(`
       SELECT 
         category_name,
         COUNT(id) as product_count,
@@ -79,14 +80,14 @@ export async function GET(req: NextRequest) {
     `).all();
 
     // Order status breakdown
-    const orderStatuses = db.prepare(`
+    const orderStatuses = await db.prepare(`
       SELECT status, COUNT(*) as count
       FROM orders
       GROUP BY status
     `).all();
 
     // Top outstanding debtors
-    const topDebtors = db.prepare(`
+    const topDebtors = await db.prepare(`
       SELECT 
         c.id, c.customer_code, c.name, c.mobile,
         COALESCE(SUM(o.remaining_balance), 0) as balance,
@@ -100,7 +101,7 @@ export async function GET(req: NextRequest) {
     `).all();
 
     // Staff Performance
-    const staffPerformance = db.prepare(`
+    const staffPerformance = await db.prepare(`
       SELECT 
         u.id, u.name, u.employee_id, r.name as role_name,
         (SELECT COUNT(*) FROM customers c WHERE c.created_by = u.id) as customers_added,

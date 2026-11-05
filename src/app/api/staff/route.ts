@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "Access denied: Admin only module" }, { status: 403 });
     }
 
-    const staff = db
+    const staff = await db
       .prepare(
         `
         SELECT 
@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check unique username and email
-    const existing = db
+    const existing = (await db
       .prepare(`SELECT id, username, email FROM users WHERE lower(username) = ? OR lower(email) = ?`)
-      .get(username.trim().toLowerCase(), email.trim().toLowerCase()) as any;
+      .get(username.trim().toLowerCase(), email.trim().toLowerCase())) as any;
 
     if (existing) {
       return NextResponse.json(
@@ -72,18 +72,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Get role ID
-    const roleRecord = db
+    const roleRecord = ((await db
       .prepare(`SELECT id FROM roles WHERE name = ?`)
-      .get(role === "admin" ? "admin" : "staff") as { id: number };
+      .get(role === "admin" ? "admin" : "staff")) as unknown) as { id: number };
 
     // Auto-generate Employee ID: SVC-EMP-xxxx
-    const maxRow = db.prepare(`SELECT MAX(id) as max_id FROM users`).get() as { max_id: number | null };
+    const maxRow = ((await db.prepare(`SELECT MAX(id) as max_id FROM users`).get()) as unknown) as { max_id: number | null };
     const nextSeq = String((maxRow?.max_id || 0) + 1).padStart(3, "0");
     const employeeId = `SVC-EMP-${nextSeq}`;
 
     const passHash = await hashPassword(password);
 
-    const insertResult = db
+    const insertResult = await db
       .prepare(
         `
         INSERT INTO users (
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     const newUserId = insertResult.lastInsertRowid;
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "User Created",
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       details: `Created new ${role === "admin" ? "Admin" : "Staff"} user "${name}" (${username})`,
     });
 
-    const newUser = db
+    const newUser = await db
       .prepare(
         `
         SELECT u.id, u.employee_id, u.name, u.username, u.email, u.mobile, u.status, u.joining_date, r.name as role_name
@@ -131,4 +131,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to create staff user" }, { status: 500 });
   }
 }
-

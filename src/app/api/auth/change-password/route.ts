@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const row = db
+    const row = ((await db
       .prepare("SELECT password_hash FROM users WHERE id = ?")
-      .get(user.id) as { password_hash: string } | undefined;
+      .get(user.id)) as unknown) as { password_hash: string } | undefined;
 
     if (!row) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -42,12 +42,12 @@ export async function POST(req: NextRequest) {
     }
 
     const newHash = await hashPassword(newPassword);
-    db.prepare("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
+    await db.prepare("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
       newHash,
       user.id
     );
 
-    logActivity({
+    await logActivity({
       userId: user.id,
       userName: user.name,
       action: "Password Changed",
