@@ -111,15 +111,9 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
         {/* Right Actions & Status Badges */}
         <div className="flex items-center gap-2.5 lg:gap-4 shrink-0">
-          {/* Cloud Synced Ledger Pill */}
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Database Ledger Cloud Synced</span>
-          </div>
-
           {/* Quick Action Button: New Customer */}
           <Link
-            href="/dashboard/customers?action=new"
+            href="/dashboard/customers/new"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-navy-900 text-white hover:bg-navy-800 transition shadow-xs"
           >
             <UserPlus className="w-3.5 h-3.5" />

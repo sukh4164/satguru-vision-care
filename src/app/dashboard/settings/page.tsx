@@ -18,14 +18,15 @@ import {
 export default function StoreSettingsPage() {
   const [settings, setSettings] = useState<any>({
     store_name: "SATGURU VISION CARE",
-    tagline: "Opticians, Optometrists & Contact Lens Specialists",
-    address: "Shop No. 4, Ground Floor, Vision Plaza, Main Market Road",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400050",
-    mobile: "+91 98200 12345",
-    whatsapp: "+91 98200 12345",
-    email: "contact@satguruvisioncare.com",
+    tagline: "Eye Care • Eye Wear • Better Vision",
+    address: "Delhi gate",
+    city: "Aligarh",
+    state: "Uttar Pradesh",
+    pincode: "202001",
+    mobile: "+91 98708 33033",
+    whatsapp: "+91 98708 33033",
+    email: "sukh4164@gmail.com",
+    website: "satguruvisioncare.com",
     gst_number: "27AAAAA0000A1Z5",
     invoice_prefix: "SVC-INV-",
     currency_symbol: "₹",
@@ -209,7 +210,7 @@ export default function StoreSettingsPage() {
             2. Customer Communication & Store Hours
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block font-bold text-slate-700 uppercase mb-1">
                 Mobile / Phone
@@ -246,7 +247,19 @@ export default function StoreSettingsPage() {
               />
             </div>
 
-            <div className="sm:col-span-3">
+            <div>
+              <label className="block font-bold text-slate-700 uppercase mb-1">
+                Website / Domain
+              </label>
+              <input
+                type="text"
+                value={settings.website || "satguruvisioncare.com"}
+                onChange={(e) => setSettings({ ...settings, website: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-navy-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div className="sm:col-span-2 lg:col-span-4">
               <label className="block font-bold text-slate-700 uppercase mb-1">
                 Store Business Timings
               </label>

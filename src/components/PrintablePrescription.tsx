@@ -20,9 +20,13 @@ export function PrintablePrescription({
   const store = storeSettings || {
     store_name: "SATGURU VISION CARE",
     tagline: "Opticians, Optometrists & Contact Lens Specialists",
-    address: "Shop No. 4, Ground Floor, Vision Plaza, Main Market Road",
-    city: "Mumbai",
-    mobile: "+91 98200 12345",
+    address: "Delhi gate",
+    city: "Aligarh",
+    state: "Uttar Pradesh",
+    pincode: "202001",
+    mobile: "+91 98708 33033",
+    email: "sukh4164@gmail.com",
+    website: "satguruvisioncare.com",
   };
 
   return (
@@ -51,19 +55,31 @@ export function PrintablePrescription({
         {/* Clinic Header */}
         <div className="pb-6 border-b-2 border-navy-950 flex justify-between items-start">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-navy-950 text-sky-400 flex items-center justify-center">
-                <Eye className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div
+                style={{ width: "48px", height: "48px" }}
+                className="w-12 h-12 rounded-xl overflow-hidden shadow-sm bg-[#002942] border border-slate-200 shrink-0 p-0.5"
+              >
+                <img
+                  src="/logo.png"
+                  alt="Satguru Vision Care"
+                  width={48}
+                  height={48}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <h1 className="text-xl font-black tracking-tight text-navy-950 font-sans">
-                {store.store_name}
-              </h1>
+              <div>
+                <h1 className="text-xl font-black tracking-tight text-navy-950 font-sans">
+                  {store.store_name}
+                </h1>
+                <p className="text-xs font-bold text-brand-700 uppercase tracking-wide">
+                  Opticians, Optometrists & Contact Lens Clinic
+                </p>
+              </div>
             </div>
-            <p className="text-xs font-bold text-brand-700 uppercase tracking-wide mt-1">
-              Opticians, Optometrists & Contact Lens Clinic
-            </p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              {store.address}, {store.city} | <strong>Tel:</strong> {store.mobile}
+            <p className="text-xs text-slate-600 mt-1">
+              {store.address}, {store.city} | <strong>Tel:</strong> {store.mobile} | <strong>Web:</strong> satguruvisioncare.com
             </p>
           </div>
           <div className="text-right">

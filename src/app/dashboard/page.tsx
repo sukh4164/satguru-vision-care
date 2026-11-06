@@ -155,7 +155,7 @@ export default async function DashboardPage() {
               <span>Test Eye Power (Rx)</span>
             </Link>
             <Link
-              href="/dashboard/customers?action=new"
+              href="/dashboard/customers/new"
               className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition backdrop-blur-xs flex items-center gap-1.5"
             >
               <UserPlus className="w-4 h-4" />
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
       {/* Quick Action Tiles (Inspired by User's Reference Image 3) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Link
-          href="/dashboard/customers?action=new"
+          href="/dashboard/customers/new"
           className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-brand-400 hover:shadow-md transition group text-left"
         >
           <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-2 group-hover:scale-105 transition">

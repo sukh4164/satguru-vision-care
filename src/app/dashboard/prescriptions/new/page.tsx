@@ -168,7 +168,7 @@ export default function NewPrescriptionPage() {
               1. Select Customer / Patient
             </h3>
             <Link
-              href="/dashboard/customers?action=new"
+              href="/dashboard/customers/new"
               className="text-xs font-bold text-brand-600 hover:underline"
             >
               + Register New Customer

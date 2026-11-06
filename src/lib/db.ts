@@ -113,14 +113,15 @@ export async function initDatabase() {
       CREATE TABLE IF NOT EXISTS store_settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         store_name TEXT DEFAULT 'SATGURU VISION CARE',
-        tagline TEXT DEFAULT 'Opticians, Optometrists & Contact Lens Specialists',
-        address TEXT DEFAULT 'Shop No. 4, Ground Floor, Vision Plaza, Main Market Road',
-        city TEXT DEFAULT 'Mumbai',
-        state TEXT DEFAULT 'Maharashtra',
-        pincode TEXT DEFAULT '400050',
-        mobile TEXT DEFAULT '+91 98200 12345',
-        whatsapp TEXT DEFAULT '+91 98200 12345',
-        email TEXT DEFAULT 'contact@satguruvisioncare.com',
+        tagline TEXT DEFAULT 'Eye Care • Eye Wear • Better Vision',
+        address TEXT DEFAULT 'Delhi gate',
+        city TEXT DEFAULT 'Aligarh',
+        state TEXT DEFAULT 'Uttar Pradesh',
+        pincode TEXT DEFAULT '202001',
+        mobile TEXT DEFAULT '+91 98708 33033',
+        whatsapp TEXT DEFAULT '+91 98708 33033',
+        email TEXT DEFAULT 'sukh4164@gmail.com',
+        website TEXT DEFAULT 'satguruvisioncare.com',
         gst_number TEXT DEFAULT '27AAAAA0000A1Z5',
         invoice_prefix TEXT DEFAULT 'SVC-INV-',
         currency TEXT DEFAULT 'INR',
@@ -315,6 +316,10 @@ export async function initDatabase() {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    try {
+      await client.execute("ALTER TABLE store_settings ADD COLUMN website TEXT DEFAULT 'satguruvisioncare.com'");
+    } catch (_) {}
   } catch (err) {
     console.error("Turso initDatabase warning:", err);
   }

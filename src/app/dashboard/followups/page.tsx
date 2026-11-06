@@ -189,7 +189,7 @@ export default function FollowupsPage() {
         ) : (
           followups.map((f) => {
             const isCompleted = f.status === "Completed";
-            const waMsg = `Hello ${f.customer_name},\nThis is a friendly reminder from *SATGURU VISION CARE* regarding: *${f.type}*.\n\n${f.notes || "We look forward to welcoming you to the store."}\n\nFor any queries, contact us at +91 98200 12345.`;
+            const waMsg = `Hello ${f.customer_name},\nThis is a friendly reminder from *SATGURU VISION CARE* regarding: *${f.type}*.\n\n${f.notes || "We look forward to welcoming you to the store."}\n\nFor any queries, contact us at +91 98708 33033.`;
             const waLink = formatWhatsAppUrl(f.customer_whatsapp || f.customer_mobile, waMsg);
 
             return (

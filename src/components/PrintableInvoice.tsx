@@ -24,13 +24,14 @@ export function PrintableInvoice({
   const store = storeSettings || {
     store_name: "SATGURU VISION CARE",
     tagline: "Opticians, Optometrists & Contact Lens Specialists",
-    address: "Shop No. 4, Ground Floor, Vision Plaza, Main Market Road",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400050",
-    mobile: "+91 98200 12345",
-    whatsapp: "+91 98200 12345",
-    email: "contact@satguruvisioncare.com",
+    address: "Delhi gate",
+    city: "Aligarh",
+    state: "Uttar Pradesh",
+    pincode: "202001",
+    mobile: "+91 98708 33033",
+    whatsapp: "+91 98708 33033",
+    email: "sukh4164@gmail.com",
+    website: "satguruvisioncare.com",
     gst_number: "27AAAAA0000A1Z5",
     invoice_footer:
       "Warranty applies to frame manufacturing defects for 6 months. Progressive lenses come with a 30-day adaptation guarantee.",
@@ -79,24 +80,39 @@ export function PrintableInvoice({
       >
         {/* Header Branding */}
         <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b-2 border-navy-950">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-black tracking-tight text-navy-950 font-sans">
-                {store.store_name}
-              </h1>
+          <div className="flex items-start gap-4">
+            <div
+              style={{ width: "64px", height: "64px" }}
+              className="w-16 h-16 rounded-xl overflow-hidden shadow-sm bg-[#002942] border border-slate-200 shrink-0 p-1"
+            >
+              <img
+                src="/logo.png"
+                alt="Satguru Vision Care"
+                width={64}
+                height={64}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                className="w-full h-full object-contain"
+              />
             </div>
-            <p className="text-xs font-bold text-brand-700 tracking-wide uppercase">
-              {store.tagline}
-            </p>
-            <p className="text-xs text-slate-600 mt-1 max-w-md">
-              {store.address}, {store.city}, {store.state} - {store.pincode}
-            </p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              <strong>Phone:</strong> {store.mobile} | <strong>WhatsApp:</strong> {store.whatsapp}
-            </p>
-            <p className="text-xs text-slate-600">
-              <strong>Email:</strong> {store.email} | <strong>GSTIN:</strong> {store.gst_number}
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-2xl font-black tracking-tight text-navy-950 font-sans">
+                  {store.store_name}
+                </h1>
+              </div>
+              <p className="text-xs font-bold text-brand-700 tracking-wide uppercase">
+                {store.tagline}
+              </p>
+              <p className="text-xs text-slate-600 mt-1 max-w-md">
+                {store.address}, {store.city}, {store.state} - {store.pincode}
+              </p>
+              <p className="text-xs text-slate-600 mt-0.5">
+                <strong>Phone:</strong> {store.mobile} | <strong>WhatsApp:</strong> {store.whatsapp}
+              </p>
+              <p className="text-xs text-slate-600">
+                <strong>Email:</strong> {store.email} | <strong>Web:</strong> {store.website || "satguruvisioncare.com"} | <strong>GSTIN:</strong> {store.gst_number}
+              </p>
+            </div>
           </div>
 
           <div className="text-right">
