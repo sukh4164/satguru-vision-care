@@ -25,6 +25,7 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.16",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.12",
@@ -32,6 +33,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "wrangler": "^4.158.0"
   }
 }
