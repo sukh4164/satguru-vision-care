@@ -76,7 +76,7 @@ export function PrintableInvoice({
       {/* Invoice Document (Designed to print cleanly) */}
       <div
         ref={printAreaRef}
-        className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-4xl mx-auto print:border-none print:shadow-none print:p-0 print:m-0"
+        className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-4xl mx-auto print:border print:border-slate-300 print:rounded-2xl print:p-6 print:m-0 print:w-full print:max-w-none print:shadow-none"
       >
         {/* Header Branding */}
         <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b-2 border-navy-950">

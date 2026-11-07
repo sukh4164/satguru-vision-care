@@ -3,7 +3,11 @@
 import React from "react";
 import {
   SPH_OPTIONS,
+  SPH_MINUS_OPTIONS,
+  SPH_PLUS_OPTIONS,
   CYL_OPTIONS,
+  CYL_MINUS_OPTIONS,
+  CYL_PLUS_OPTIONS,
   AXIS_OPTIONS,
   ADD_OPTIONS,
   DUAL_PD_OPTIONS,
@@ -78,11 +82,25 @@ export function PrescriptionInputTable({ data, onChange, disabled = false }: Pro
               onChange={(e) => updateField("od_sph", e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium text-navy-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
             >
-              {SPH_OPTIONS.map((val) => (
-                <option key={`od-sph-${val}`} value={val}>
-                  {val}
-                </option>
-              ))}
+              <option value="0.00">0.00</option>
+              <option value="Plano">Plano</option>
+              <optgroup label="── Minus (-) Sphere ──">
+                {SPH_MINUS_OPTIONS.map((val) => (
+                  <option key={`od-sph-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="── Plus (+) Sphere ──">
+                {SPH_PLUS_OPTIONS.map((val) => (
+                  <option key={`od-sph-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              {!SPH_OPTIONS.includes(data.od_sph) && data.od_sph && (
+                <option value={data.od_sph}>{data.od_sph}</option>
+              )}
             </select>
           </div>
 
@@ -95,11 +113,24 @@ export function PrescriptionInputTable({ data, onChange, disabled = false }: Pro
               onChange={(e) => updateField("od_cyl", e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium text-navy-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
             >
-              {CYL_OPTIONS.map((val) => (
-                <option key={`od-cyl-${val}`} value={val}>
-                  {val}
-                </option>
-              ))}
+              <option value="0.00">0.00</option>
+              <optgroup label="── Minus (-) Cylinder ──">
+                {CYL_MINUS_OPTIONS.map((val) => (
+                  <option key={`od-cyl-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="── Plus (+) Cylinder ──">
+                {CYL_PLUS_OPTIONS.map((val) => (
+                  <option key={`od-cyl-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              {!CYL_OPTIONS.includes(data.od_cyl) && data.od_cyl && (
+                <option value={data.od_cyl}>{data.od_cyl}</option>
+              )}
             </select>
           </div>
 
@@ -160,11 +191,25 @@ export function PrescriptionInputTable({ data, onChange, disabled = false }: Pro
               onChange={(e) => updateField("os_sph", e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium text-navy-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
             >
-              {SPH_OPTIONS.map((val) => (
-                <option key={`os-sph-${val}`} value={val}>
-                  {val}
-                </option>
-              ))}
+              <option value="0.00">0.00</option>
+              <option value="Plano">Plano</option>
+              <optgroup label="── Minus (-) Sphere ──">
+                {SPH_MINUS_OPTIONS.map((val) => (
+                  <option key={`os-sph-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="── Plus (+) Sphere ──">
+                {SPH_PLUS_OPTIONS.map((val) => (
+                  <option key={`os-sph-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              {!SPH_OPTIONS.includes(data.os_sph) && data.os_sph && (
+                <option value={data.os_sph}>{data.os_sph}</option>
+              )}
             </select>
           </div>
 
@@ -177,11 +222,24 @@ export function PrescriptionInputTable({ data, onChange, disabled = false }: Pro
               onChange={(e) => updateField("os_cyl", e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium text-navy-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
             >
-              {CYL_OPTIONS.map((val) => (
-                <option key={`os-cyl-${val}`} value={val}>
-                  {val}
-                </option>
-              ))}
+              <option value="0.00">0.00</option>
+              <optgroup label="── Minus (-) Cylinder ──">
+                {CYL_MINUS_OPTIONS.map((val) => (
+                  <option key={`os-cyl-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="── Plus (+) Cylinder ──">
+                {CYL_PLUS_OPTIONS.map((val) => (
+                  <option key={`os-cyl-${val}`} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </optgroup>
+              {!CYL_OPTIONS.includes(data.os_cyl) && data.os_cyl && (
+                <option value={data.os_cyl}>{data.os_cyl}</option>
+              )}
             </select>
           </div>
 

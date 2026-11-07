@@ -51,7 +51,7 @@ export function PrintablePrescription({
       </div>
 
       {/* Prescription Document */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto print:border-none print:shadow-none print:p-0 print:m-0">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto print:border print:border-slate-300 print:rounded-2xl print:p-6 print:m-0 print:w-full print:max-w-none print:shadow-none">
         {/* Clinic Header */}
         <div className="pb-6 border-b-2 border-navy-950 flex justify-between items-start">
           <div>

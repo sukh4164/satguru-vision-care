@@ -21,7 +21,7 @@ import { formatDate } from "@/lib/utils";
 export default function NewPrescriptionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedCustomerId = searchParams.get("customerId");
+  const preselectedCustomerId = searchParams.get("customerId") || searchParams.get("customerid");
 
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(preselectedCustomerId || "");

@@ -145,7 +145,7 @@ export function Sidebar({ user }: SidebarProps) {
 
   return (
     <aside
-      className={`relative flex flex-col bg-navy-950 text-slate-300 transition-all duration-300 z-30 shrink-0 border-r border-navy-900 ${
+      className={`relative flex flex-col bg-navy-950 text-slate-300 transition-all duration-300 z-30 shrink-0 border-r border-navy-900 print:hidden ${
         collapsed ? "w-20" : "w-64"
       }`}
     >

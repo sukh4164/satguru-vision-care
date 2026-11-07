@@ -66,9 +66,9 @@ export default function PrescriptionDetailPage() {
   const { prescription, previousPrescription, storeSettings } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
       {/* Top Header Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/prescriptions"
@@ -98,11 +98,13 @@ export default function PrescriptionDetailPage() {
         </div>
       </div>
 
-      {/* Side-by-Side Comparison against Previous Prescription */}
-      <PrescriptionComparisonCard
-        latest={prescription}
-        previous={previousPrescription}
-      />
+      {/* Side-by-Side Comparison against Previous Prescription (Hidden during Print) */}
+      <div className="print:hidden">
+        <PrescriptionComparisonCard
+          latest={prescription}
+          previous={previousPrescription}
+        />
+      </div>
 
       {/* Official Printable Prescription Slip */}
       <PrintablePrescription

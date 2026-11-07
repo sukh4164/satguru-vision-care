@@ -92,27 +92,50 @@ export const ALL_PERMISSIONS = [
 ];
 
 // Helper to generate optical power ranges for SPH, CYL, ADD, AXIS, PD
-export const SPH_OPTIONS = (() => {
-  const list: string[] = ["Plano", "0.00"];
-  for (let v = 0.25; v <= 16.0; v += 0.25) {
-    list.push(`+${v.toFixed(2)}`);
-  }
+export const SPH_MINUS_OPTIONS = (() => {
+  const list: string[] = [];
   for (let v = 0.25; v <= 20.0; v += 0.25) {
     list.push(`-${v.toFixed(2)}`);
   }
   return list;
 })();
 
-export const CYL_OPTIONS = (() => {
-  const list: string[] = ["0.00"];
+export const SPH_PLUS_OPTIONS = (() => {
+  const list: string[] = [];
+  for (let v = 0.25; v <= 16.0; v += 0.25) {
+    list.push(`+${v.toFixed(2)}`);
+  }
+  return list;
+})();
+
+export const SPH_OPTIONS = [
+  "0.00",
+  "Plano",
+  ...SPH_MINUS_OPTIONS,
+  ...SPH_PLUS_OPTIONS,
+];
+
+export const CYL_MINUS_OPTIONS = (() => {
+  const list: string[] = [];
   for (let v = 0.25; v <= 8.0; v += 0.25) {
     list.push(`-${v.toFixed(2)}`);
   }
+  return list;
+})();
+
+export const CYL_PLUS_OPTIONS = (() => {
+  const list: string[] = [];
   for (let v = 0.25; v <= 6.0; v += 0.25) {
     list.push(`+${v.toFixed(2)}`);
   }
   return list;
 })();
+
+export const CYL_OPTIONS = [
+  "0.00",
+  ...CYL_MINUS_OPTIONS,
+  ...CYL_PLUS_OPTIONS,
+];
 
 export const AXIS_OPTIONS = Array.from({ length: 180 }, (_, i) => `${i + 1}`);
 
